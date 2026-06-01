@@ -1,0 +1,616 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>repair-staff-portal</title>
+  <meta name="description" content="Внутренний портал сервисного центра: прайс, модели, услуги, поставщики, запросы на изменения и админ-панель.">
+  <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&f[]=general-sans@500,600,700&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg:#0a1020;--surface:#121a31;--surface-2:#17213d;--surface-3:#1d2948;--border:#28365d;--divider:#223054;
+      --text:#e8efff;--muted:#a5b3d9;--faint:#7d89aa;--primary:#7b61ff;--primary-hover:#684ef1;--primary-soft:#211f46;--blue:#59b4ff;--green:#4ad59d;--orange:#f0a54a;--red:#ff6c8d;
+      --radius-sm:10px;--radius-md:14px;--radius-lg:18px;--radius-xl:22px;--radius-full:9999px;
+      --shadow:0 18px 34px rgba(0,0,0,.28);--shadow-sm:0 8px 22px rgba(0,0,0,.18);
+      --display:'General Sans','Inter',sans-serif;--body:'Satoshi','Inter',sans-serif;--sidebar-width:274px;--transition:180ms cubic-bezier(.16,1,.3,1);
+    }
+    *{box-sizing:border-box;margin:0;padding:0}
+    html{scroll-behavior:smooth;-webkit-text-size-adjust:none;text-size-adjust:none}
+    body{min-height:100vh;font-family:var(--body);font-size:15px;line-height:1.55;color:var(--text);background:radial-gradient(circle at top right, rgba(89,180,255,.10), transparent 22%),radial-gradient(circle at top left, rgba(123,97,255,.18), transparent 28%),linear-gradient(180deg,#0a1020,#0b1224 48%,#090f1d)}
+    img,svg{display:block;max-width:100%;height:auto} button,input,textarea,select{font:inherit;color:inherit} button{border:none;background:none;cursor:pointer} table{border-collapse:collapse;width:100%} a{text-decoration:none;color:inherit}
+    h1,h2,h3{font-family:var(--display);line-height:1.05;letter-spacing:-.02em} p{max-width:74ch}
+    :focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+
+    .app{display:grid;grid-template-columns:var(--sidebar-width) 1fr;min-height:100vh}
+    .sidebar{background:linear-gradient(180deg,#0d1428,#0b1223);padding:20px 16px;border-right:1px solid rgba(123,97,255,.16);display:flex;flex-direction:column;gap:18px}
+    .brand{display:flex;align-items:center;gap:12px;padding:14px;border-radius:18px;background:linear-gradient(180deg,#151f3b,#121a31);border:1px solid rgba(123,97,255,.18)}
+    .brand svg{width:42px;height:42px;color:var(--blue)} .brand strong{display:block;font-size:18px}.brand span{display:block;font-size:13px;color:var(--muted);margin-top:2px}
+    .nav{display:grid;gap:8px}
+    .nav button{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;min-height:46px;border-radius:14px;color:var(--muted);transition:all var(--transition)}
+    .nav button:hover,.nav button.active{background:linear-gradient(180deg,#19244a,#16203e);color:var(--text);border:1px solid rgba(123,97,255,.18)}
+    .nav button .badge{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-width:24px;height:24px;padding:0 8px;border-radius:999px;background:rgba(89,180,255,.12);color:#9fd7ff;font-size:12px;font-weight:800}.notif-dot{width:10px;height:10px;border-radius:999px;background:#57ff92;box-shadow:0 0 14px rgba(87,255,146,.8);animation:notifPulse 1.4s infinite}@keyframes notifPulse{0%{transform:scale(1);opacity:1}100%{transform:scale(1.8);opacity:0}}
+    .side-note{font-size:13px;color:var(--muted);padding:12px 14px;border-radius:14px;background:rgba(123,97,255,.06);border:1px solid rgba(123,97,255,.12)}
+    .mobile-topbar{display:none}
+
+    .main{padding:24px 28px 28px}
+    .topbar{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;margin-bottom:20px}
+    .eyebrow{font-size:12px;text-transform:uppercase;letter-spacing:.14em;color:var(--muted);font-weight:700;margin-bottom:8px}
+    .title{font-size:40px;max-width:15ch;margin-bottom:10px}
+    .subtitle{color:var(--muted)}
+    .actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+    .btn{min-height:44px;padding:0 16px;border-radius:12px;font-size:14px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;transition:all var(--transition)}
+    .btn-primary{background:linear-gradient(180deg,var(--primary),var(--primary-hover));color:#fff;box-shadow:0 10px 24px rgba(123,97,255,.28)}
+    .btn-primary:hover{background:linear-gradient(180deg,#8b74ff,var(--primary))}
+    .btn-ghost{background:var(--surface-2);border:1px solid var(--border);color:var(--text)}
+    .btn-ghost:hover{background:var(--surface-3)}
+    .section{display:none}.section.active{display:block}
+    .card{background:linear-gradient(180deg,var(--surface),var(--surface-2));border:1px solid var(--border);border-radius:var(--radius-xl);box-shadow:var(--shadow-sm)}
+    .panel{padding:20px}
+    .hero{display:grid;grid-template-columns:1.35fr .95fr;gap:18px;margin-bottom:18px}
+    .grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+    .grid-2{display:grid;grid-template-columns:1.1fr .9fr;gap:18px}
+    .stack{display:grid;gap:18px}
+    .kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:18px}
+    .kpi{padding:16px;border-radius:16px;background:var(--surface-3);border:1px solid var(--divider)}
+    .kpi small{display:block;color:var(--muted);margin-bottom:6px}.kpi strong{display:block;font-size:25px;margin-bottom:4px}
+    .card-title{font-size:24px;margin-bottom:10px}.card-subtitle{color:var(--muted)}
+    .chips{display:flex;gap:8px;flex-wrap:wrap}
+    .tag{padding:4px 8px;border-radius:999px;background:var(--primary-soft);color:#c5baff;font-size:12px;font-weight:700}
+    .note{padding:14px 16px;border-radius:14px;background:#141d37;border:1px solid rgba(123,97,255,.16);color:var(--text)}
+
+    .toolbar{display:flex;justify-content:space-between;align-items:center;gap:14px;margin-bottom:16px}
+    .search-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+    .search-row input,.search-row select,.field input,.field select,.field textarea{min-height:44px;padding:10px 12px;border-radius:12px;border:1px solid var(--border);background:var(--surface-3);width:100%}
+    .search-row input,.search-row select{min-width:220px}
+    .field{display:grid;gap:8px}.field label{font-size:14px;font-weight:700}.field textarea{min-height:110px;resize:vertical}
+    .category-list,.admin-list,.request-list{display:grid;gap:10px}
+    .list-item{display:flex;justify-content:space-between;align-items:center;gap:14px;padding:14px 16px;border-radius:14px;background:var(--surface-2);border:1px solid var(--divider)}
+    .list-item strong{display:block;font-size:15px}.list-item small{display:block;color:var(--muted);margin-top:2px}
+    .status{display:inline-flex;align-items:center;padding:6px 10px;border-radius:999px;font-size:12px;font-weight:700}
+    .status.pending{background:rgba(240,165,74,.16);color:#ffc36f}.status.done{background:rgba(74,213,157,.14);color:#76f0bf}.status.new{background:rgba(89,180,255,.14);color:#9fd7ff}.status.work{background:rgba(240,165,74,.16);color:#ffc36f}.status.completed{background:rgba(74,213,157,.14);color:#76f0bf}.status-select{min-height:38px;padding:8px 10px;border-radius:10px;border:1px solid var(--border);background:var(--surface-3);color:var(--text);min-width:140px}
+
+    .accordion{display:grid;gap:10px}
+    details.service-card{background:var(--surface-2);border:1px solid var(--divider);border-radius:14px;overflow:hidden}
+    details.service-card summary{list-style:none;display:grid;grid-template-columns:1fr auto;gap:14px;align-items:center;padding:14px 16px;cursor:pointer}
+    details.service-card summary::-webkit-details-marker{display:none}
+    .service-meta{display:flex;gap:6px;flex-wrap:wrap;margin-top:7px}
+    .price{padding:7px 10px;border-radius:999px;background:rgba(89,180,255,.12);color:#9fd7ff;font-size:13px;font-weight:700;white-space:nowrap}
+    .service-body{padding:0 16px 15px;color:var(--muted)}
+
+    .table-wrap{overflow:auto;border:1px solid var(--border);border-radius:16px}
+    th,td{padding:14px 16px;text-align:left;border-bottom:1px solid var(--divider);vertical-align:top}
+    thead th{background:#17213d;font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+    tbody tr{background:#121a31} tbody tr:hover{background:#182445}
+
+    .hidden{display:none!important}
+
+    @media (max-width: 1040px){
+      .app{grid-template-columns:1fr}
+      .sidebar{display:none}
+      .mobile-topbar{display:flex;position:sticky;top:0;z-index:50;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px;background:rgba(10,16,32,.92);backdrop-filter:blur(14px);border-bottom:1px solid rgba(123,97,255,.16)}
+      .mobile-brand{display:flex;align-items:center;gap:10px}.mobile-brand svg{width:34px;height:34px;color:var(--blue)}
+      .mobile-nav-toggle{width:42px;height:42px;border-radius:12px;background:var(--surface-2);border:1px solid var(--border)}
+      .sidebar.open{display:flex;position:fixed;inset:0 auto 0 0;width:min(300px,86vw);height:100vh;z-index:120;box-shadow:var(--shadow)}
+      .main{padding:16px}
+      .topbar,.hero,.grid-3,.grid-2,.kpis{display:grid;grid-template-columns:1fr}
+      .title{font-size:31px;max-width:none}
+      .toolbar{flex-direction:column;align-items:stretch}
+      .search-row{flex-direction:column;align-items:stretch}
+      .search-row input,.search-row select,.btn{width:100%}
+      .list-item{flex-direction:column;align-items:flex-start}
+      details.service-card summary{grid-template-columns:1fr}
+    }
+
+    html[data-force-view="desktop"] body{min-width:1360px}
+    html[data-force-view="desktop"] .app{grid-template-columns:var(--sidebar-width) 1fr}
+    html[data-force-view="desktop"] .sidebar{display:flex}
+    html[data-force-view="desktop"] .mobile-topbar{display:none}
+    html[data-force-view="desktop"] .main{padding:24px 28px 28px}
+    html[data-force-view="desktop"] .topbar{display:flex;grid-template-columns:none}
+    html[data-force-view="desktop"] .hero{display:grid;grid-template-columns:1.35fr .95fr}
+    html[data-force-view="desktop"] .grid-3{display:grid;grid-template-columns:repeat(3,1fr)}
+    html[data-force-view="desktop"] .grid-2{display:grid;grid-template-columns:1.1fr .9fr}
+    html[data-force-view="desktop"] .kpis{display:grid;grid-template-columns:repeat(3,1fr)}
+    html[data-force-view="mobile"] .app{grid-template-columns:1fr}
+    html[data-force-view="mobile"] .sidebar{display:none}
+    html[data-force-view="mobile"] .mobile-topbar{display:flex;position:sticky;top:0;z-index:50;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px;background:rgba(10,16,32,.92);backdrop-filter:blur(14px);border-bottom:1px solid rgba(123,97,255,.16)}
+    html[data-force-view="mobile"] .main{padding:16px}
+    html[data-force-view="mobile"] .topbar,html[data-force-view="mobile"] .hero,html[data-force-view="mobile"] .grid-3,html[data-force-view="mobile"] .grid-2,html[data-force-view="mobile"] .kpis{display:grid;grid-template-columns:1fr}
+
+  </style>
+</head>
+<body>
+  <div class="mobile-topbar">
+    <div class="mobile-brand">
+      <svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true">
+        <rect x="10" y="8" width="26" height="48" rx="8"></rect>
+        <path d="M20 18h6"></path>
+        <path d="M42 18l12 12-8 8-12-12"></path>
+        <path d="M38 22l4-4 16 16-4 4"></path>
+        <circle cx="23" cy="48" r="2"></circle>
+      </svg>
+      <div>
+        <strong>Это Сервис</strong>
+        <div style="font-size:12px;color:var(--muted)">Мобильная версия</div>
+      </div>
+    </div>
+    <button class="mobile-nav-toggle" id="mobileNavToggle">☰</button>
+  </div>
+
+  <div class="app">
+    <aside class="sidebar" id="sidebar">
+      <div class="brand">
+        <svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3" aria-label="Логотип">
+          <rect x="10" y="8" width="26" height="48" rx="8"></rect>
+          <path d="M20 18h6"></path>
+          <path d="M42 18l12 12-8 8-12-12"></path>
+          <path d="M38 22l4-4 16 16-4 4"></path>
+          <circle cx="23" cy="48" r="2"></circle>
+        </svg>
+        <div>
+          <strong>Это Сервис</strong>
+          <span>Прайс-портал для сотрудников</span>
+        </div>
+      </div>
+
+      <nav class="nav" aria-label="Основное меню">
+        <button class="nav-btn active" data-target="overview"><span>Обзор</span></button>
+        <button class="nav-btn" data-target="prices"><span>Прайс и модели</span><span class="badge">iPhone</span></button>
+        <button class="nav-btn" data-target="requests"><span>Заявки</span><span class="badge" id="requestBadge"><span class="notif-dot"></span><span id="requestBadgeCount">2</span></span></button>
+                <button class="nav-btn" data-target="suppliers"><span>Поставщики</span></button>
+        <button class="nav-btn hidden" data-target="admin" id="adminNavBtn"><span>Админка</span></button>
+      </nav>
+
+      <div class="mode-switch" style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;padding:6px;border-radius:14px;background:#131c35;border:1px solid rgba(123,97,255,.16)"><button class="mode-btn active" data-view="auto" style="min-height:40px;border-radius:10px;color:var(--text);background:linear-gradient(180deg,var(--primary),var(--primary-hover));font-size:13px;font-weight:700">Авто</button><button class="mode-btn" data-view="desktop" style="min-height:40px;border-radius:10px;color:var(--muted);font-size:13px;font-weight:700">ПК</button><button class="mode-btn" data-view="mobile" style="min-height:40px;border-radius:10px;color:var(--muted);font-size:13px;font-weight:700">Моб.</button></div><div class="side-note">Я исправил прошлые ошибки: оставил одну основную навигацию, убрал лишние дубли меню, вернул все ключевые блоки и оставил аккордеоны только внутри услуг моделей, где они действительно полезны. [web:204][web:208][web:210]</div>
+    </aside>
+
+    <main class="main">
+      <div class="topbar">
+        <div>
+          <div class="eyebrow">Внутренний портал сервисного центра</div>
+          <h1 class="title">Все, что мы обсуждали, собрано в одну стабильную версию</h1>
+          <p class="subtitle">Здесь есть клиентская часть с категориями и моделями, услуги с ценами, форма запросов на изменение прайса, поставщики, вход по ролям и админская часть. Навигация сделана одной системой, потому что для dashboard-интерфейсов рекомендуют простое и масштабируемое меню без дублирования. [web:205][web:207][web:210]</p>
+        </div>
+        <div class="actions">
+          <button class="btn btn-primary" id="jumpToRequests">Запрос на изменение</button><button class="btn btn-ghost" id="openRequestsTop">Открыть заявки</button>
+          <button class="btn btn-ghost" id="demoLoginMaster">Войти как мастер</button>
+          <button class="btn btn-ghost" id="demoLoginAdmin">Войти как админ</button>
+        </div>
+      </div>
+
+      <section class="section active" id="overview">
+        <div class="hero">
+          <article class="card panel">
+            <div class="eyebrow">Обзор</div>
+            <h2 class="card-title">Стабильный единый экран</h2>
+            <p class="card-subtitle">Я оставил одну основную навигацию слева и единый контентный экран справа, потому что повторяющиеся меню и лишние блоки быстрого доступа только путают интерфейс и создают дублирование. [web:204][web:210]</p>
+            <div class="kpis">
+              <div class="kpi"><small>Категорий</small><strong>3</strong><span>iPhone, Android, приставки</span></div>
+              <div class="kpi"><small>Запросов</small><strong id="kpiRequests">2</strong><span>На изменение прайса</span></div>
+              <div class="kpi"><small>Ролей</small><strong>2</strong><span>Мастер и админ</span></div>
+            </div>
+          </article>
+          <article class="card panel stack">
+            <div>
+              <div class="eyebrow">Вход</div>
+              <h2 class="card-title">Демо-авторизация</h2>
+              <p class="card-subtitle">Мастер видит прайс и может отправлять запросы, администратор получает доступ к редактированию. Для реальной безопасной системы позже потребуется серверная авторизация, хэширование паролей и журнал действий. [web:205][web:207]</p>
+            </div>
+            <div class="field"><label for="loginRole">Роль</label><select id="loginRole"><option value="master">Мастер</option><option value="admin">Администратор</option></select></div>
+            <div class="field"><label for="loginUser">Логин</label><input id="loginUser" placeholder="master или admin"></div>
+            <div class="field"><label for="loginPass">Пароль</label><input id="loginPass" type="password" placeholder="1234 для демо"></div>
+            <button class="btn btn-primary" id="loginBtn">Войти</button>
+            <div class="note" id="loginMsg">Демо-доступ: master / 1234 или admin / 1234.</div>
+          </article>
+        </div>
+
+        <div class="grid-3">
+          <article class="card panel"><div class="eyebrow">Клиентская часть</div><h3 class="card-title">Категории и модели</h3><p class="card-subtitle">Сотрудник открывает категорию, выбирает модель и видит типовые услуги.</p></article>
+          <article class="card panel"><div class="eyebrow">Запросы</div><h3 class="card-title">Изменение цены</h3><p class="card-subtitle">Есть отдельная форма для добавления услуги, модели или смены цены.</p></article>
+          <article class="card panel"><div class="eyebrow">Админка</div><h3 class="card-title">Редактор данных</h3><p class="card-subtitle">Администратор может добавлять категории, модели и услуги в демо-режиме.</p></article>
+        </div>
+      </section>
+
+      <section class="section" id="prices">
+        <div class="grid-2">
+          <article class="card panel">
+            <div class="toolbar">
+              <div>
+                <div class="eyebrow">Клиентская часть</div>
+                <h2 class="card-title">Категории и модели</h2>
+              </div>
+              <div class="search-row">
+                <select id="categorySelect"></select>
+                <input id="modelSearch" placeholder="Поиск модели">
+              </div>
+            </div>
+            <div class="category-list" id="modelList"></div>
+          </article>
+
+          <article class="card panel">
+            <div class="eyebrow">Услуги по модели</div>
+            <h2 id="servicesTitle" class="card-title">Выберите модель</h2>
+            <p class="card-subtitle" style="margin-bottom:14px">Аккордеоны оставлены только у услуг внутри модели, потому что они помогают сократить длинный список, но не должны скрывать весь важный контент страницы. [web:208][web:213][web:216]</p>
+            <div id="servicesAccordion" class="accordion"></div>
+          </article>
+        </div>
+      </section>
+
+      <section class="section" id="requests">
+        <div class="grid-2">
+          <article class="card panel">
+            <div class="eyebrow">Заявки</div>
+            <h2 class="card-title">Журнал входящих обращений</h2>
+            <p class="card-subtitle" style="margin-bottom:14px">Этот блок подготовлен для будущей интеграции с Яндекс Почтой: письма с заявками смогут приходить на сервер, разбираться по полям и попадать в таблицу как новые обращения. Яндекс поддерживает IMAP для почтовых клиентов, поэтому такую интеграцию реально сделать уже на backend. [web:246]</p>
+            <div class="actions" style="margin-bottom:14px">
+              <button class="btn btn-primary" id="simulateRequestBtn">Новая демо-заявка</button>
+              <button class="btn btn-ghost" id="markRequestsReadBtn">Убрать индикатор</button>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr><th>Имя</th><th>Устройство</th><th>Причина обращения</th><th>Статус</th></tr>
+                </thead>
+                <tbody id="requestsTable"></tbody>
+              </table>
+            </div>
+          </article>
+          <article class="card panel">
+            <div class="eyebrow">Будущая интеграция</div>
+            <h2 class="card-title">Как это будет работать</h2>
+            <div class="admin-list">
+              <div class="list-item"><div><strong>Шаг 1</strong><small>На Яндекс Почту приходит письмо от клиента.</small></div></div>
+              <div class="list-item"><div><strong>Шаг 2</strong><small>Backend читает входящие письма по IMAP и выделяет текст обращения.</small></div></div>
+              <div class="list-item"><div><strong>Шаг 3</strong><small>Система создаёт новую заявку в таблице сайта.</small></div></div>
+              <div class="list-item"><div><strong>Шаг 4</strong><small>На панели появляется зелёный индикатор и звуковое уведомление.</small></div></div>
+            </div>
+            <div class="note" style="margin-top:14px">Да, такую интеграцию реально сделать. Но не в чистом HTML, а через backend, который будет подключаться к почте, разбирать письма и записывать заявки в базу. [web:246][web:251]</div>
+          </article>
+        </div>
+      </section><section class="section" id="suppliers">
+        <article class="card panel">
+          <div class="eyebrow">Поставщики и аутсорс</div>
+          <h2 class="card-title">Таблица контрагентов</h2>
+          <p class="card-subtitle" style="margin-bottom:14px">Поставщики и аутсорсеры вынесены в отдельную наглядную таблицу, чтобы сотрудники быстро находили нужный канал закупки или передачи работ.</p>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th>Название</th><th>Тип</th><th>Специализация</th><th>SLA</th><th>Контакт</th><th>Статус</th></tr>
+              </thead>
+              <tbody id="supplierTable"></tbody>
+            </table>
+          </div>
+        </article>
+      </section>
+
+      <section class="section" id="admin">
+        <div class="grid-2">
+          <article class="card panel">
+            <div class="eyebrow">Админ-часть</div>
+            <h2 class="card-title">Добавление данных</h2>
+            <form id="adminForm" class="stack hidden">
+              <div class="field"><label for="adminCategory">Категория</label><input id="adminCategory" placeholder="Android"></div>
+              <div class="field"><label for="adminModel">Модель</label><input id="adminModel" placeholder="Galaxy S24"></div>
+              <div class="field"><label for="adminService">Услуга</label><input id="adminService" placeholder="Замена дисплея"></div>
+              <div class="field"><label for="adminPrice">Цена</label><input id="adminPrice" placeholder="8900 ₽"></div>
+              <div class="field"><label for="adminDesc">Описание</label><textarea id="adminDesc" placeholder="Краткое описание услуги"></textarea></div>
+              <button class="btn btn-primary" type="submit">Сохранить</button>
+              <div class="note" id="adminMsg">Изменения сохраняются в демо-версии страницы.</div>
+            </form>
+            <div id="adminLocked" class="note">Админ-раздел закрыт. Войдите как admin / 1234.</div>
+          </article>
+
+          <article class="card panel">
+            <div class="eyebrow">Защита и этапы</div>
+            <h2 class="card-title">Что будет в боевой версии</h2>
+            <div class="admin-list">
+              <div class="list-item"><div><strong>Backend и база</strong><small>PostgreSQL, пользователи, роли, прайс, запросы</small></div></div>
+              <div class="list-item"><div><strong>Безопасность</strong><small>Хэширование паролей, HTTPS, ограничение попыток входа, аудит действий</small></div></div>
+              <div class="list-item"><div><strong>История изменений</strong><small>Кто поменял цену, когда и почему</small></div></div>
+              <div class="list-item"><div><strong>Почта</strong><small>При необходимости можно потом подключить входящие письма к заявкам</small></div></div>
+            </div>
+          </article>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const iphoneModels = [
+      'iPhone 17e','iPhone 17 Pro Max','iPhone 17 Pro','iPhone 17','iPhone Air','iPhone 16e','iPhone 16 Pro Max','iPhone 16 Pro','iPhone 16 Plus','iPhone 16',
+      'iPhone 15 Pro Max','iPhone 15 Pro','iPhone 15 Plus','iPhone 15','iPhone 14 Pro Max','iPhone 14 Pro','iPhone 14 Plus','iPhone 14','iPhone SE (3rd generation)',
+      'iPhone 13 Pro Max','iPhone 13 Pro','iPhone 13','iPhone 13 mini','iPhone 12 Pro Max','iPhone 12 Pro','iPhone 12','iPhone 12 mini','iPhone SE (2nd generation)',
+      'iPhone 11 Pro Max','iPhone 11 Pro','iPhone 11','iPhone XS Max','iPhone XS','iPhone XR','iPhone X','iPhone 8 Plus','iPhone 8','iPhone 7 Plus','iPhone 7','iPhone SE (1st generation)','iPhone 6s Plus','iPhone 6s','iPhone 6 Plus','iPhone 6'
+    ];
+
+    const phoneServices = [
+      {name:'Замена дисплея', price:'от 5900 ₽', desc:'Одна из самых частых услуг при трещинах, полосах, чёрном экране и проблемах с сенсором.', tags:['часто','экран']},
+      {name:'Замена аккумулятора', price:'от 2900 ₽', desc:'Популярная услуга при быстрой разрядке, перегреве и сильной потере ёмкости.', tags:['часто','батарея']},
+      {name:'Замена разъёма зарядки', price:'от 3500 ₽', desc:'Нужна при плохом контакте, отсутствии зарядки или окислении порта.', tags:['часто','charging']},
+      {name:'Замена заднего стекла', price:'от 4000 ₽', desc:'Частая работа после падений и ударов корпуса.', tags:['корпус']},
+      {name:'Замена основной камеры', price:'от 4900 ₽', desc:'Если камера не фокусируется, не запускается или дрожит изображение.', tags:['камера']},
+      {name:'Замена фронтальной камеры / Face ID шлейфа', price:'от 5200 ₽', desc:'Работа по переднему модулю и связанным датчикам.', tags:['камера','датчики']},
+      {name:'Замена динамика', price:'от 2400 ₽', desc:'Если пропал внешний звук или плохо слышно собеседника.', tags:['звук']},
+      {name:'Замена микрофона', price:'от 2600 ₽', desc:'При жалобах на плохую слышимость голоса и отсутствие записи.', tags:['звук']},
+      {name:'Диагностика / чистка после влаги', price:'от 1500 ₽', desc:'Первичная диагностика, чистка и оценка последствий после попадания воды.', tags:['диагностика','влага']}
+    ];
+
+    const appData = {
+      categories: [
+        { name:'iPhone', models: iphoneModels.map(model => ({ name:model, services: phoneServices.map(s => ({...s})) })) },
+        { name:'Android', models:[
+          {name:'Samsung Galaxy S24', services: phoneServices.slice(0,5).map(s => ({...s}))},
+          {name:'Xiaomi 14', services: phoneServices.slice(0,5).map(s => ({...s}))},
+          {name:'Redmi Note 13', services: phoneServices.slice(0,4).map(s => ({...s}))}
+        ]},
+        { name:'Игровые приставки', models:[
+          {name:'PlayStation 5', services:[
+            {name:'Чистка и замена термопасты', price:'от 4500 ₽', desc:'Профилактика шума, перегрева и ухудшения охлаждения.', tags:['профилактика']},
+            {name:'Замена HDMI-порта', price:'от 6500 ₽', desc:'При отсутствии изображения и повреждении разъёма.', tags:['порт']}
+          ]}
+        ]}
+      ],
+      suppliers: [
+        {name:'Display Hub', type:'Поставщик', spec:'Дисплеи и стекла', sla:'1-2 дня', contact:'parts@displayhub.example', status:'Проверен'},
+        {name:'Battery Line', type:'Поставщик', spec:'Аккумуляторы', sla:'1 день', contact:'+7 (900) 000-10-10', status:'Проверен'}
+      ],
+      outsourcers: [
+        {name:'BoardFix Lab', type:'Аутсорсер', spec:'Пайка и ремонт плат', sla:'2-4 дня', contact:'Telegram @boardfixlab', status:'Приоритет'},
+        {name:'Glass Laser Pro', type:'Аутсорсер', spec:'Лазерное снятие заднего стекла', sla:'1-2 дня', contact:'+7 (900) 000-20-20', status:'Проверен'}
+      ],
+      requests: [
+        {name:'Иван', device:'iPhone 13', reason:'Разбит экран, нужна замена дисплея', status:'Новая'},
+        {name:'Мария', device:'Samsung Galaxy S24', reason:'Телефон быстро разряжается, нужна замена аккумулятора', status:'В работе'}
+      ]
+    };
+
+    let currentRole = 'Гость';
+    let selectedCategory = 'iPhone';
+    let selectedModel = iphoneModels[0];
+
+    const els = {
+      sidebar: document.getElementById('sidebar'),
+      mobileNavToggle: document.getElementById('mobileNavToggle'),
+      navBtns: document.querySelectorAll('.nav-btn'),
+      sections: document.querySelectorAll('.section'),
+      categorySelect: document.getElementById('categorySelect'),
+      modelSearch: document.getElementById('modelSearch'),
+      modelList: document.getElementById('modelList'),
+      servicesTitle: document.getElementById('servicesTitle'),
+      servicesAccordion: document.getElementById('servicesAccordion'),
+      supplierTable: document.getElementById('supplierTable'),
+      outsourcerTable: document.getElementById('outsourcerTable'),
+      requestBadge: document.getElementById('requestBadge'),
+      requestBadgeCount: document.getElementById('requestBadgeCount'),
+      kpiRequests: document.getElementById('kpiRequests'),
+      requestsTable: document.getElementById('requestsTable'),
+      simulateRequestBtn: document.getElementById('simulateRequestBtn'),
+      markRequestsReadBtn: document.getElementById('markRequestsReadBtn'),
+      loginRole: document.getElementById('loginRole'),
+      loginUser: document.getElementById('loginUser'),
+      loginPass: document.getElementById('loginPass'),
+      loginBtn: document.getElementById('loginBtn'),
+      loginMsg: document.getElementById('loginMsg'),
+      demoLoginMaster: document.getElementById('demoLoginMaster'),
+      demoLoginAdmin: document.getElementById('demoLoginAdmin'),
+      jumpToRequests: document.getElementById('jumpToRequests'),
+      openRequestsTop: document.getElementById('openRequestsTop'),
+      adminNavBtn: document.getElementById('adminNavBtn'),
+      adminForm: document.getElementById('adminForm'),
+      adminLocked: document.getElementById('adminLocked'),
+      adminMsg: document.getElementById('adminMsg')
+    };
+
+    function setSection(id){
+      els.navBtns.forEach(btn => btn.classList.toggle('active', btn.dataset.target === id));
+      els.sections.forEach(section => section.classList.toggle('active', section.id === id));
+      els.sidebar.classList.remove('open');
+    }
+
+    function getCategory(){ return appData.categories.find(c => c.name === selectedCategory) || appData.categories[0]; }
+
+    function renderCategoryOptions(){
+      els.categorySelect.innerHTML = appData.categories.map(c => `<option ${c.name===selectedCategory?'selected':''}>${c.name}</option>`).join('');
+    }
+
+    function renderModels(){
+      const q = els.modelSearch.value.trim().toLowerCase();
+      const category = getCategory();
+      const models = category.models.filter(m => m.name.toLowerCase().includes(q));
+      if(!models.length){
+        els.modelList.innerHTML = `<div class="note">Ничего не найдено.</div>`;
+        els.servicesTitle.textContent = 'Модель не найдена';
+        els.servicesAccordion.innerHTML = '';
+        return;
+      }
+      if(!models.some(m => m.name === selectedModel)) selectedModel = models[0].name;
+      els.modelList.innerHTML = models.map(m => `
+        <button class="list-item model-btn" data-model="${m.name}">
+          <div><strong>${m.name}</strong><small>${m.services.length} услуг</small></div>
+          <span class="status ${m.name===selectedModel?'done':'pending'}">${m.name===selectedModel?'Открыто':'Выбрать'}</span>
+        </button>`).join('');
+      document.querySelectorAll('.model-btn').forEach(btn => btn.addEventListener('click', () => { selectedModel = btn.dataset.model; renderModels(); renderServices(); }));
+      renderServices();
+    }
+
+    function renderServices(){
+      const category = getCategory();
+      const model = category.models.find(m => m.name === selectedModel);
+      if(!model) return;
+      els.servicesTitle.textContent = `${category.name} — ${model.name}`;
+      els.servicesAccordion.innerHTML = model.services.map((service, i) => `
+        <details class="service-card" ${i===0?'open':''}>
+          <summary>
+            <div>
+              <strong>${service.name}</strong>
+              <div class="service-meta">${service.tags.map(tag => `<span class="tag">${tag}</span>`).join('')}</div>
+            </div>
+            <span class="price">${service.price}</span>
+          </summary>
+          <div class="service-body"><p>${service.desc}</p></div>
+        </details>
+      `).join('');
+    }
+
+    function renderSuppliers(){
+      els.supplierTable.innerHTML = appData.suppliers.map(s => `
+        <tr>
+          <td><strong>${s.name}</strong></td>
+          <td>${s.type}</td>
+          <td>${s.spec}</td>
+          <td>${s.sla}</td>
+          <td>${s.contact}</td>
+          <td>${s.status}</td>
+        </tr>`).join('');
+      els.outsourcerTable.innerHTML = appData.outsourcers.map(s => `
+        <tr>
+          <td><strong>${s.name}</strong></td>
+          <td>${s.type}</td>
+          <td>${s.spec}</td>
+          <td>${s.sla}</td>
+          <td>${s.contact}</td>
+          <td>${s.status}</td>
+        </tr>`).join('');
+    }
+
+    function statusClass(status){
+      if(status === 'В работе') return 'status work';
+      if(status === 'Выполнена') return 'status completed';
+      return 'status new';
+    }
+
+    function renderRequests(){
+      els.requestsTable.innerHTML = appData.requests.map((r, index) => `
+        <tr>
+          <td><strong>${r.name}</strong></td>
+          <td>${r.device}</td>
+          <td>${r.reason}</td>
+          <td>
+            <div style="display:grid;gap:8px">
+              <span class="${statusClass(r.status)}">${r.status}</span>
+              <select class="status-select" data-index="${index}">
+                <option value="Новая" ${r.status === 'Новая' ? 'selected' : ''}>Новая</option>
+                <option value="В работе" ${r.status === 'В работе' ? 'selected' : ''}>В работе</option>
+                <option value="Выполнена" ${r.status === 'Выполнена' ? 'selected' : ''}>Выполнена</option>
+              </select>
+            </div>
+          </td>
+        </tr>`).join('');
+      document.querySelectorAll('.status-select').forEach(select => {
+        select.addEventListener('change', e => {
+          const index = Number(e.target.dataset.index);
+          appData.requests[index].status = e.target.value;
+          renderRequests();
+        });
+      });
+      const count = appData.requests.filter(r => r.status === 'Новая').length;
+      els.requestBadgeCount.textContent = count > 99 ? '99+' : String(count);
+      els.kpiRequests.textContent = String(appData.requests.length);
+    }
+
+    function playNotification(){
+      try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(880, ctx.currentTime);
+        gain.gain.setValueAtTime(0.001, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.08, ctx.currentTime + 0.01);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.36);
+      } catch (e) {}
+    }
+
+    function updateAdminAccess(){
+      const isAdmin = currentRole === 'Администратор';
+      els.adminNavBtn.classList.toggle('hidden', !isAdmin);
+      els.adminForm.classList.toggle('hidden', !isAdmin);
+      els.adminLocked.classList.toggle('hidden', isAdmin);
+      if(!isAdmin && document.getElementById('admin').classList.contains('active')) setSection('overview');
+    }
+
+    function login(role, user, pass){
+      if(role === 'master' && user === 'master' && pass === '1234'){
+        currentRole = 'Мастер';
+        els.loginMsg.textContent = 'Вы вошли как мастер. Можно смотреть прайс и отправлять запросы.';
+      } else if(role === 'admin' && user === 'admin' && pass === '1234'){
+        currentRole = 'Администратор';
+        els.loginMsg.textContent = 'Вы вошли как администратор. Админ-раздел открыт.';
+      } else {
+        currentRole = 'Гость';
+        els.loginMsg.textContent = 'Неверные демо-данные.';
+      }
+      updateAdminAccess();
+    }
+
+
+    const modeBtns = document.querySelectorAll('.mode-btn');
+    function applyViewMode(mode){
+      document.documentElement.removeAttribute('data-force-view');
+      if(mode === 'desktop' || mode === 'mobile') document.documentElement.setAttribute('data-force-view', mode);
+      modeBtns.forEach(btn => {
+        const active = btn.dataset.view === mode;
+        btn.classList.toggle('active', active);
+        btn.style.background = active ? 'linear-gradient(180deg,var(--primary),var(--primary-hover))' : 'transparent';
+        btn.style.color = active ? '#fff' : 'var(--muted)';
+      });
+      els.sidebar.classList.remove('open');
+    }
+    modeBtns.forEach(btn => btn.addEventListener('click', () => applyViewMode(btn.dataset.view)));
+    els.mobileNavToggle.addEventListener('click', () => els.sidebar.classList.toggle('open'));
+    els.navBtns.forEach(btn => btn.addEventListener('click', () => setSection(btn.dataset.target)));
+    els.categorySelect.addEventListener('change', e => { selectedCategory = e.target.value; selectedModel = getCategory().models[0]?.name || ''; renderModels(); });
+    els.modelSearch.addEventListener('input', renderModels);
+    els.loginBtn.addEventListener('click', () => login(els.loginRole.value, els.loginUser.value.trim(), els.loginPass.value.trim()));
+    els.demoLoginMaster.addEventListener('click', () => { els.loginRole.value='master'; els.loginUser.value='master'; els.loginPass.value='1234'; login('master','master','1234'); });
+    els.demoLoginAdmin.addEventListener('click', () => { els.loginRole.value='admin'; els.loginUser.value='admin'; els.loginPass.value='1234'; login('admin','admin','1234'); });
+    els.jumpToRequests.addEventListener('click', () => setSection('requests'));
+    els.openRequestsTop.addEventListener('click', () => setSection('requests'));
+    els.simulateRequestBtn.addEventListener('click', () => {
+      appData.requests.unshift({name:'Новый клиент', device:'iPhone 14 Pro', reason:'Не заряжается, нужна диагностика разъёма', status:'Новая'});
+      renderRequests();
+      playNotification();
+    });
+    els.markRequestsReadBtn.addEventListener('click', () => {
+      const dot = document.querySelector('.notif-dot');
+      if (dot) dot.style.display = 'none';
+    });
+
+    els.adminForm.addEventListener('submit', e => {
+      e.preventDefault();
+      const categoryName = document.getElementById('adminCategory').value.trim();
+      const modelName = document.getElementById('adminModel').value.trim();
+      const serviceName = document.getElementById('adminService').value.trim();
+      const price = document.getElementById('adminPrice').value.trim();
+      const desc = document.getElementById('adminDesc').value.trim() || 'Описание будет уточнено.';
+      if(!categoryName || !modelName || !serviceName || !price){
+        els.adminMsg.textContent = 'Заполни категорию, модель, услугу и цену.';
+        return;
+      }
+      let category = appData.categories.find(c => c.name === categoryName);
+      if(!category){ category = {name: categoryName, models: []}; appData.categories.push(category); }
+      let model = category.models.find(m => m.name === modelName);
+      if(!model){ model = {name: modelName, services: []}; category.models.push(model); }
+      const existing = model.services.find(s => s.name === serviceName);
+      if(existing){ existing.price = price; existing.desc = desc; }
+      else { model.services.push({name: serviceName, price, desc, tags:['новое']}); }
+      selectedCategory = categoryName;
+      selectedModel = modelName;
+      renderCategoryOptions();
+      renderModels();
+      els.adminMsg.textContent = 'Изменение сохранено в демо-версии.';
+      e.target.reset();
+    });
+
+    renderCategoryOptions();
+    renderModels();
+    renderSuppliers();
+    renderRequests();
+    updateAdminAccess();
+  </script>
+</body>
+</html>

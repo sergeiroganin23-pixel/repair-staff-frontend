@@ -437,8 +437,8 @@
     function setLoggedOutState(message = 'Войди под реальным пользователем из базы backend.') {
       appData.user = null;
       appData.token = '';
-      els.currentUserLabel.textContent = 'Гость';
-      els.loginMsg.textContent = message;
+      if (els.currentUserLabel) els.currentUserLabel.textContent = 'Гость';
+      if (els.loginMsg) els.loginMsg.textContent = message;
       syncAdminVisibility();
       appData.requests = [];
       renderRequests();
@@ -448,8 +448,8 @@
       appData.token = payload?.token || '';
       appData.user = payload?.user || null;
       const roleLabel = appData.user?.role === 'admin' ? 'администратор' : (appData.user?.role || 'пользователь');
-      els.currentUserLabel.textContent = appData.user ? `${appData.user.username} · ${roleLabel}` : 'Гость';
-      els.loginMsg.textContent = appData.user ? `Вход выполнен: ${appData.user.username} (${roleLabel}).` : 'Не удалось определить пользователя.';
+      if (els.currentUserLabel) els.currentUserLabel.textContent = appData.user ? `${appData.user.username} · ${roleLabel}` : 'Гость';
+      if (els.loginMsg) els.loginMsg.textContent = appData.user ? `Вход выполнен: ${appData.user.username} (${roleLabel}).` : 'Не удалось определить пользователя.';
       syncAdminVisibility();
     }
 
@@ -558,9 +558,9 @@
     }
 
     function renderOverview(){
-      els.kpiCategories.textContent = String(appData.catalog.length);
+      if (els.kpiCategories) els.kpiCategories.textContent = String(appData.catalog.length);
       const servicesCount = appData.catalog.reduce((sum, c) => sum + c.models.reduce((mSum, model) => mSum + model.services.length, 0), 0);
-      els.kpiServices.textContent = String(servicesCount);
+      if (els.kpiServices) els.kpiServices.textContent = String(servicesCount);
       els.overviewCategories.innerHTML = appData.catalog.map(category => `
         <article class="list-item">
           <div>
@@ -633,9 +633,9 @@
 
     function renderRequests(){
       const list = appData.requests.map(normalizeRequest);
-      els.kpiRequests.textContent = String(list.length);
+      if (els.kpiRequests) els.kpiRequests.textContent = String(list.length);
       const count = list.filter(r => r.status === 'Новая').length;
-      els.requestBadgeCount.textContent = count > 99 ? '99+' : String(count);
+      if (els.requestBadgeCount) els.requestBadgeCount.textContent = count > 99 ? '99+' : String(count);
       if(!list.length){
         els.requestsTable.innerHTML = `
           <tr>

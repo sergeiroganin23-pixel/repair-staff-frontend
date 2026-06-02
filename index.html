@@ -199,8 +199,8 @@
             <div class="field"><label for="loginRole">Роль</label><select id="loginRole"><option value="master">Мастер</option><option value="admin">Администратор</option></select></div>
             <div class="field"><label for="loginUser">Логин</label><input id="loginUser" placeholder="master или admin"></div>
             <div class="field"><label for="loginPass">Пароль</label><input id="loginPass" type="password" placeholder="1234 для демо"></div>
-            <button class="btn btn-primary" id="loginBtn">Войти</button>
-            <div class="note" id="loginMsg">Демо-доступ: master / 1234 или admin / 1234.</div>
+            <button class="btn btn-primary" id="loginBtn">Войти через backend</button>
+            <div class="note" id="loginMsg">Вход через backend API: используется username и password из таблицы users.</div>
           </article>
         </div>
 
@@ -316,81 +316,92 @@
   </div>
 
   <script>
-    const iphoneModels = [
-      'iPhone 17e','iPhone 17 Pro Max','iPhone 17 Pro','iPhone 17','iPhone Air','iPhone 16e','iPhone 16 Pro Max','iPhone 16 Pro','iPhone 16 Plus','iPhone 16',
-      'iPhone 15 Pro Max','iPhone 15 Pro','iPhone 15 Plus','iPhone 15','iPhone 14 Pro Max','iPhone 14 Pro','iPhone 14 Plus','iPhone 14','iPhone SE (3rd generation)',
-      'iPhone 13 Pro Max','iPhone 13 Pro','iPhone 13','iPhone 13 mini','iPhone 12 Pro Max','iPhone 12 Pro','iPhone 12','iPhone 12 mini','iPhone SE (2nd generation)',
-      'iPhone 11 Pro Max','iPhone 11 Pro','iPhone 11','iPhone XS Max','iPhone XS','iPhone XR','iPhone X','iPhone 8 Plus','iPhone 8','iPhone 7 Plus','iPhone 7','iPhone SE (1st generation)','iPhone 6s Plus','iPhone 6s','iPhone 6 Plus','iPhone 6'
-    ];
-
-    const phoneServices = [
-      {name:'Замена дисплея', price:'от 5900 ₽', desc:'Одна из самых частых услуг при трещинах, полосах, чёрном экране и проблемах с сенсором.', tags:['часто','экран']},
-      {name:'Замена аккумулятора', price:'от 2900 ₽', desc:'Популярная услуга при быстрой разрядке, перегреве и сильной потере ёмкости.', tags:['часто','батарея']},
-      {name:'Замена разъёма зарядки', price:'от 3500 ₽', desc:'Нужна при плохом контакте, отсутствии зарядки или окислении порта.', tags:['часто','charging']},
-      {name:'Замена заднего стекла', price:'от 4000 ₽', desc:'Частая работа после падений и ударов корпуса.', tags:['корпус']},
-      {name:'Замена основной камеры', price:'от 4900 ₽', desc:'Если камера не фокусируется, не запускается или дрожит изображение.', tags:['камера']},
-      {name:'Замена фронтальной камеры / Face ID шлейфа', price:'от 5200 ₽', desc:'Работа по переднему модулю и связанным датчикам.', tags:['камера','датчики']},
-      {name:'Замена динамика', price:'от 2400 ₽', desc:'Если пропал внешний звук или плохо слышно собеседника.', tags:['звук']},
-      {name:'Замена микрофона', price:'от 2600 ₽', desc:'При жалобах на плохую слышимость голоса и отсутствие записи.', tags:['звук']},
-      {name:'Диагностика / чистка после влаги', price:'от 1500 ₽', desc:'Первичная диагностика, чистка и оценка последствий после попадания воды.', tags:['диагностика','влага']}
-    ];
+    const API_BASE = 'https://sergeiroganin23-pixel-repair-portal-backend-fa58.twc1.net/api';
 
     const appData = {
-      categories: [
-        { name:'iPhone', models: iphoneModels.map(model => ({ name:model, services: phoneServices.map(s => ({...s})) })) },
-        { name:'Android', models:[
-          {name:'Samsung Galaxy S24', services: phoneServices.slice(0,5).map(s => ({...s}))},
-          {name:'Xiaomi 14', services: phoneServices.slice(0,5).map(s => ({...s}))},
-          {name:'Redmi Note 13', services: phoneServices.slice(0,4).map(s => ({...s}))}
-        ]},
-        { name:'Игровые приставки', models:[
-          {name:'PlayStation 5', services:[
-            {name:'Чистка и замена термопасты', price:'от 4500 ₽', desc:'Профилактика шума, перегрева и ухудшения охлаждения.', tags:['профилактика']},
-            {name:'Замена HDMI-порта', price:'от 6500 ₽', desc:'При отсутствии изображения и повреждении разъёма.', tags:['порт']}
-          ]}
-        ]}
+      catalog: [
+        {
+          name: 'Apple',
+          count: 12,
+          models: [
+            {
+              name: 'iPhone 15 Pro Max',
+              services: [
+                { name: 'Замена дисплея OLED', price: '28 900 ₽', duration: '2–3 часа', supplier: 'DisplayHub', description: 'Оригинал Refurbished LTPO, проклейка и калибровка True Tone.' },
+                { name: 'Замена аккумулятора', price: '8 900 ₽', duration: '1 час', supplier: 'PowerCell', description: 'АКБ повышенной ёмкости с проверкой циклов и герметизацией.' }
+              ]
+            },
+            {
+              name: 'iPhone 14 Pro',
+              services: [
+                { name: 'Замена заднего стекла', price: '7 500 ₽', duration: '2 часа', supplier: 'LaserGlass', description: 'Лазерное снятие, новая крышка и переклейка магнитов MagSafe.' },
+                { name: 'Чистка после влаги', price: '4 300 ₽', duration: '1 день', supplier: 'RepairLab', description: 'Ультразвук, диагностика платы и профилактика окислов.' }
+              ]
+            }
+          ]
+        },
+        {
+          name: 'Samsung',
+          count: 9,
+          models: [
+            {
+              name: 'Galaxy S24 Ultra',
+              services: [
+                { name: 'Замена дисплея Dynamic AMOLED', price: '24 400 ₽', duration: '3 часа', supplier: 'AMOLED Parts', description: 'Модуль со стеклом и рамкой, настройка отпечатка.' },
+                { name: 'Замена нижнего шлейфа', price: '4 800 ₽', duration: '1.5 часа', supplier: 'CoreFix', description: 'Решение проблем с зарядкой, микрофоном и вибро.' }
+              ]
+            },
+            {
+              name: 'Galaxy A55',
+              services: [
+                { name: 'Замена аккумулятора', price: '3 900 ₽', duration: '1 час', supplier: 'PowerCell', description: 'Снятие задней крышки, замена АКБ, тесты по нагрузке.' }
+              ]
+            }
+          ]
+        },
+        {
+          name: 'Xiaomi',
+          count: 7,
+          models: [
+            {
+              name: 'Redmi Note 13 Pro',
+              services: [
+                { name: 'Замена дисплея', price: '6 200 ₽', duration: '2 часа', supplier: 'MiParts', description: 'Совместимый качественный модуль, установка и тесты.' },
+                { name: 'Замена разъёма зарядки', price: '2 900 ₽', duration: '1 час', supplier: 'RepairLab', description: 'Пайка нижней платы или замена субплаты, зависит от ревизии.' }
+              ]
+            }
+          ]
+        }
       ],
-      suppliers: [
-        {name:'Display Hub', type:'Поставщик', spec:'Дисплеи и стекла', sla:'1-2 дня', contact:'parts@displayhub.example', status:'Проверен'},
-        {name:'Battery Line', type:'Поставщик', spec:'Аккумуляторы', sla:'1 день', contact:'+7 (900) 000-10-10', status:'Проверен'}
-      ],
-      outsourcers: [
-        {name:'BoardFix Lab', type:'Аутсорсер', spec:'Пайка и ремонт плат', sla:'2-4 дня', contact:'Telegram @boardfixlab', status:'Приоритет'},
-        {name:'Glass Laser Pro', type:'Аутсорсер', spec:'Лазерное снятие заднего стекла', sla:'1-2 дня', contact:'+7 (900) 000-20-20', status:'Проверен'}
-      ],
-      requests: [
-        {name:'Иван', device:'iPhone 13', reason:'Разбит экран, нужна замена дисплея', status:'Новая'},
-        {name:'Мария', device:'Samsung Galaxy S24', reason:'Телефон быстро разряжается, нужна замена аккумулятора', status:'В работе'}
-      ]
+      requests: [],
+      user: null,
+      token: '',
+      loadingRequests: false
     };
 
-    let currentRole = 'Гость';
-    let selectedCategory = 'iPhone';
-    let selectedModel = iphoneModels[0];
-
     const els = {
-      sidebar: document.getElementById('sidebar'),
-      mobileNavToggle: document.getElementById('mobileNavToggle'),
-      navBtns: document.querySelectorAll('.nav-btn'),
       sections: document.querySelectorAll('.section'),
-      categorySelect: document.getElementById('categorySelect'),
-      modelSearch: document.getElementById('modelSearch'),
-      modelList: document.getElementById('modelList'),
-      servicesTitle: document.getElementById('servicesTitle'),
-      servicesAccordion: document.getElementById('servicesAccordion'),
-      supplierTable: document.getElementById('supplierTable'),
-      outsourcerTable: document.getElementById('outsourcerTable'),
+      navButtons: document.querySelectorAll('.nav-btn'),
+      categoryList: document.getElementById('categoryList'),
+      overviewCategories: document.getElementById('overviewCategories'),
+      modelTable: document.getElementById('modelTable'),
+      serviceAccordion: document.getElementById('serviceAccordion'),
       requestBadge: document.getElementById('requestBadge'),
       requestBadgeCount: document.getElementById('requestBadgeCount'),
+      kpiCategories: document.getElementById('kpiCategories'),
+      kpiServices: document.getElementById('kpiServices'),
       kpiRequests: document.getElementById('kpiRequests'),
       requestsTable: document.getElementById('requestsTable'),
-      simulateRequestBtn: document.getElementById('simulateRequestBtn'),
-      markRequestsReadBtn: document.getElementById('markRequestsReadBtn'),
+      requestName: document.getElementById('requestName'),
+      requestDevice: document.getElementById('requestDevice'),
+      requestReason: document.getElementById('requestReason'),
+      requestMsg: document.getElementById('requestMsg'),
       loginRole: document.getElementById('loginRole'),
       loginUser: document.getElementById('loginUser'),
       loginPass: document.getElementById('loginPass'),
       loginBtn: document.getElementById('loginBtn'),
       loginMsg: document.getElementById('loginMsg'),
+      currentUserLabel: document.getElementById('currentUserLabel'),
       demoLoginMaster: document.getElementById('demoLoginMaster'),
       demoLoginAdmin: document.getElementById('demoLoginAdmin'),
       jumpToRequests: document.getElementById('jumpToRequests'),
@@ -401,216 +412,301 @@
       adminMsg: document.getElementById('adminMsg')
     };
 
+    function escapeHtml(value = '') {
+      return String(value)
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#39;');
+    }
+
+    function authHeaders(extra = {}) {
+      return {
+        'Content-Type': 'application/json',
+        ...(appData.token ? { Authorization: `Bearer ${appData.token}` } : {}),
+        ...extra
+      };
+    }
+
     function setSection(id){
-      els.navBtns.forEach(btn => btn.classList.toggle('active', btn.dataset.target === id));
       els.sections.forEach(section => section.classList.toggle('active', section.id === id));
-      els.sidebar.classList.remove('open');
+      els.navButtons.forEach(btn => btn.classList.toggle('active', btn.dataset.target === id));
     }
 
-    function getCategory(){ return appData.categories.find(c => c.name === selectedCategory) || appData.categories[0]; }
-
-    function renderCategoryOptions(){
-      els.categorySelect.innerHTML = appData.categories.map(c => `<option ${c.name===selectedCategory?'selected':''}>${c.name}</option>`).join('');
+    function setLoggedOutState(message = 'Войди под реальным пользователем из базы backend.') {
+      appData.user = null;
+      appData.token = '';
+      els.currentUserLabel.textContent = 'Гость';
+      els.loginMsg.textContent = message;
+      syncAdminVisibility();
+      appData.requests = [];
+      renderRequests();
     }
 
-    function renderModels(){
-      const q = els.modelSearch.value.trim().toLowerCase();
-      const category = getCategory();
-      const models = category.models.filter(m => m.name.toLowerCase().includes(q));
-      if(!models.length){
-        els.modelList.innerHTML = `<div class="note">Ничего не найдено.</div>`;
-        els.servicesTitle.textContent = 'Модель не найдена';
-        els.servicesAccordion.innerHTML = '';
+    function applyLoginData(payload){
+      appData.token = payload?.token || '';
+      appData.user = payload?.user || null;
+      const roleLabel = appData.user?.role === 'admin' ? 'администратор' : (appData.user?.role || 'пользователь');
+      els.currentUserLabel.textContent = appData.user ? `${appData.user.username} · ${roleLabel}` : 'Гость';
+      els.loginMsg.textContent = appData.user ? `Вход выполнен: ${appData.user.username} (${roleLabel}).` : 'Не удалось определить пользователя.';
+      syncAdminVisibility();
+    }
+
+    async function login(username, password){
+      els.loginBtn.disabled = true;
+      els.loginMsg.textContent = 'Выполняю вход...';
+      try {
+        const response = await fetch(`${API_BASE}/auth/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password })
+        });
+        const data = await response.json().catch(() => ({}));
+        if(!response.ok) throw new Error(data.message || 'Ошибка входа');
+        applyLoginData(data);
+        await loadRequests();
+      } catch (error) {
+        setLoggedOutState(error.message || 'Не удалось войти');
+      } finally {
+        els.loginBtn.disabled = false;
+      }
+    }
+
+    async function loadRequests(){
+      if(!appData.token){
+        appData.requests = [];
+        renderRequests();
         return;
       }
-      if(!models.some(m => m.name === selectedModel)) selectedModel = models[0].name;
-      els.modelList.innerHTML = models.map(m => `
-        <button class="list-item model-btn" data-model="${m.name}">
-          <div><strong>${m.name}</strong><small>${m.services.length} услуг</small></div>
-          <span class="status ${m.name===selectedModel?'done':'pending'}">${m.name===selectedModel?'Открыто':'Выбрать'}</span>
-        </button>`).join('');
-      document.querySelectorAll('.model-btn').forEach(btn => btn.addEventListener('click', () => { selectedModel = btn.dataset.model; renderModels(); renderServices(); }));
-      renderServices();
+      els.requestMsg.textContent = 'Загружаю заявки с сервера...';
+      try {
+        const response = await fetch(`${API_BASE}/requests`, {
+          headers: authHeaders()
+        });
+        const data = await response.json().catch(() => []);
+        if(!response.ok) throw new Error(data.message || 'Не удалось загрузить заявки');
+        appData.requests = Array.isArray(data) ? data : [];
+        renderRequests();
+        els.requestMsg.textContent = 'Заявки синхронизированы с backend.';
+      } catch (error) {
+        appData.requests = [];
+        renderRequests();
+        els.requestMsg.textContent = error.message || 'Ошибка загрузки заявок.';
+      }
     }
 
-    function renderServices(){
-      const category = getCategory();
-      const model = category.models.find(m => m.name === selectedModel);
-      if(!model) return;
-      els.servicesTitle.textContent = `${category.name} — ${model.name}`;
-      els.servicesAccordion.innerHTML = model.services.map((service, i) => `
-        <details class="service-card" ${i===0?'open':''}>
-          <summary>
-            <div>
-              <strong>${service.name}</strong>
-              <div class="service-meta">${service.tags.map(tag => `<span class="tag">${tag}</span>`).join('')}</div>
-            </div>
-            <span class="price">${service.price}</span>
-          </summary>
-          <div class="service-body"><p>${service.desc}</p></div>
-        </details>
+    async function createRequest(){
+      const customer_name = els.requestName.value.trim();
+      const device = els.requestDevice.value.trim();
+      const issue = els.requestReason.value.trim();
+      if(!customer_name || !device || !issue){
+        els.requestMsg.textContent = 'Заполни имя клиента, устройство и описание проблемы.';
+        return;
+      }
+      if(!appData.token){
+        els.requestMsg.textContent = 'Сначала войди в систему.';
+        return;
+      }
+      els.requestMsg.textContent = 'Отправляю заявку...';
+      try {
+        const response = await fetch(`${API_BASE}/requests`, {
+          method: 'POST',
+          headers: authHeaders(),
+          body: JSON.stringify({ customer_name, device, issue })
+        });
+        const data = await response.json().catch(() => ({}));
+        if(!response.ok) throw new Error(data.message || 'Не удалось создать заявку');
+        els.requestName.value = '';
+        els.requestDevice.value = '';
+        els.requestReason.value = '';
+        els.requestMsg.textContent = 'Заявка отправлена в backend.';
+        await loadRequests();
+        setSection('requests');
+      } catch (error) {
+        els.requestMsg.textContent = error.message || 'Ошибка отправки заявки.';
+      }
+    }
+
+    async function updateRequestStatus(id, status){
+      if(!appData.token){
+        els.requestMsg.textContent = 'Сначала войди в систему.';
+        return;
+      }
+      try {
+        const response = await fetch(`${API_BASE}/requests/${id}/status`, {
+          method: 'PATCH',
+          headers: authHeaders(),
+          body: JSON.stringify({ status })
+        });
+        const data = await response.json().catch(() => ({}));
+        if(!response.ok) throw new Error(data.message || 'Не удалось обновить статус');
+        await loadRequests();
+      } catch (error) {
+        els.requestMsg.textContent = error.message || 'Ошибка обновления статуса.';
+      }
+    }
+
+    function normalizeRequest(item, index){
+      return {
+        id: item.id ?? item.request_id ?? index,
+        name: item.customer_name ?? item.name ?? item.client_name ?? 'Без имени',
+        device: item.device ?? item.model ?? 'Без устройства',
+        reason: item.issue ?? item.reason ?? item.description ?? 'Без описания',
+        status: item.status ?? 'Новая'
+      };
+    }
+
+    function renderOverview(){
+      els.kpiCategories.textContent = String(appData.catalog.length);
+      const servicesCount = appData.catalog.reduce((sum, c) => sum + c.models.reduce((mSum, model) => mSum + model.services.length, 0), 0);
+      els.kpiServices.textContent = String(servicesCount);
+      els.overviewCategories.innerHTML = appData.catalog.map(category => `
+        <article class="list-item">
+          <div>
+            <strong>${escapeHtml(category.name)}</strong>
+            <small>${category.count} моделей в каталоге</small>
+          </div>
+          <span class="status new">Активна</span>
+        </article>
       `).join('');
     }
 
-    function renderSuppliers(){
-      els.supplierTable.innerHTML = appData.suppliers.map(s => `
-        <tr>
-          <td><strong>${s.name}</strong></td>
-          <td>${s.type}</td>
-          <td>${s.spec}</td>
-          <td>${s.sla}</td>
-          <td>${s.contact}</td>
-          <td>${s.status}</td>
-        </tr>`).join('');
-      els.outsourcerTable.innerHTML = appData.outsourcers.map(s => `
-        <tr>
-          <td><strong>${s.name}</strong></td>
-          <td>${s.type}</td>
-          <td>${s.spec}</td>
-          <td>${s.sla}</td>
-          <td>${s.contact}</td>
-          <td>${s.status}</td>
-        </tr>`).join('');
+    function renderCategories(){
+      els.categoryList.innerHTML = appData.catalog.map(category => `
+        <article class="list-item">
+          <div>
+            <strong>${escapeHtml(category.name)}</strong>
+            <small>${category.models.map(model => model.name).join(' · ')}</small>
+          </div>
+          <span class="status new">${category.count} моделей</span>
+        </article>
+      `).join('');
     }
 
-    function statusClass(status){
-      if(status === 'В работе') return 'status work';
-      if(status === 'Выполнена') return 'status completed';
-      return 'status new';
+    function renderModels(){
+      const rows = [];
+      appData.catalog.forEach(category => {
+        category.models.forEach(model => {
+          rows.push(`
+            <tr>
+              <td><strong>${escapeHtml(category.name)}</strong></td>
+              <td>${escapeHtml(model.name)}</td>
+              <td>${model.services.length}</td>
+              <td>${escapeHtml(model.services.map(service => service.supplier).join(', '))}</td>
+            </tr>
+          `);
+        });
+      });
+      els.modelTable.innerHTML = rows.join('');
+    }
+
+    function renderServices(){
+      const cards = [];
+      appData.catalog.forEach(category => {
+        category.models.forEach(model => {
+          model.services.forEach(service => {
+            cards.push(`
+              <details class="service-card">
+                <summary>
+                  <div>
+                    <strong>${escapeHtml(service.name)}</strong>
+                    <div class="service-meta">
+                      <span class="tag">${escapeHtml(category.name)}</span>
+                      <span class="tag">${escapeHtml(model.name)}</span>
+                      <span class="tag">${escapeHtml(service.duration)}</span>
+                    </div>
+                  </div>
+                  <span class="price">${escapeHtml(service.price)}</span>
+                </summary>
+                <div class="service-body">
+                  <p>${escapeHtml(service.description)}</p>
+                  <p style="margin-top:8px">Поставщик: ${escapeHtml(service.supplier)}</p>
+                </div>
+              </details>
+            `);
+          });
+        });
+      });
+      els.serviceAccordion.innerHTML = cards.join('');
     }
 
     function renderRequests(){
-      els.requestsTable.innerHTML = appData.requests.map((r, index) => `
-        <tr>
-          <td><strong>${r.name}</strong></td>
-          <td>${r.device}</td>
-          <td>${r.reason}</td>
-          <td>
-            <div style="display:grid;gap:8px">
-              <span class="${statusClass(r.status)}">${r.status}</span>
-              <select class="status-select" data-index="${index}">
-                <option value="Новая" ${r.status === 'Новая' ? 'selected' : ''}>Новая</option>
-                <option value="В работе" ${r.status === 'В работе' ? 'selected' : ''}>В работе</option>
-                <option value="Выполнена" ${r.status === 'Выполнена' ? 'selected' : ''}>Выполнена</option>
-              </select>
-            </div>
-          </td>
-        </tr>`).join('');
-      document.querySelectorAll('.status-select').forEach(select => {
-        select.addEventListener('change', e => {
-          const index = Number(e.target.dataset.index);
-          appData.requests[index].status = e.target.value;
-          renderRequests();
-        });
-      });
-      const count = appData.requests.filter(r => r.status === 'Новая').length;
+      const list = appData.requests.map(normalizeRequest);
+      els.kpiRequests.textContent = String(list.length);
+      const count = list.filter(r => r.status === 'Новая').length;
       els.requestBadgeCount.textContent = count > 99 ? '99+' : String(count);
-      els.kpiRequests.textContent = String(appData.requests.length);
+      if(!list.length){
+        els.requestsTable.innerHTML = `
+          <tr>
+            <td colspan="5">Нет заявок или они ещё не загружены.</td>
+          </tr>
+        `;
+        return;
+      }
+      els.requestsTable.innerHTML = list.map((r) => `
+        <tr>
+          <td><strong>${escapeHtml(r.name)}</strong></td>
+          <td>${escapeHtml(r.device)}</td>
+          <td>${escapeHtml(r.reason)}</td>
+          <td><span class="status ${r.status === 'Новая' ? 'new' : r.status === 'В работе' ? 'work' : 'completed'}">${escapeHtml(r.status)}</span></td>
+          <td>
+            <select class="status-select" data-request-id="${escapeHtml(r.id)}">
+              <option value="Новая" ${r.status === 'Новая' ? 'selected' : ''}>Новая</option>
+              <option value="В работе" ${r.status === 'В работе' ? 'selected' : ''}>В работе</option>
+              <option value="Готово" ${r.status === 'Готово' ? 'selected' : ''}>Готово</option>
+            </select>
+          </td>
+        </tr>
+      `).join('');
+
+      document.querySelectorAll('.status-select').forEach(select => {
+        select.addEventListener('change', (e) => updateRequestStatus(e.target.dataset.requestId, e.target.value));
+      });
     }
 
-    function playNotification(){
-      try {
-        const ctx = new (window.AudioContext || window.webkitAudioContext)();
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(880, ctx.currentTime);
-        gain.gain.setValueAtTime(0.001, ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.08, ctx.currentTime + 0.01);
-        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35);
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.start();
-        osc.stop(ctx.currentTime + 0.36);
-      } catch (e) {}
-    }
-
-    function updateAdminAccess(){
-      const isAdmin = currentRole === 'Администратор';
+    function syncAdminVisibility(){
+      const isAdmin = appData.user?.role === 'admin';
       els.adminNavBtn.classList.toggle('hidden', !isAdmin);
       els.adminForm.classList.toggle('hidden', !isAdmin);
       els.adminLocked.classList.toggle('hidden', isAdmin);
       if(!isAdmin && document.getElementById('admin').classList.contains('active')) setSection('overview');
     }
 
-    function login(role, user, pass){
-      if(role === 'master' && user === 'master' && pass === '1234'){
-        currentRole = 'Мастер';
-        els.loginMsg.textContent = 'Вы вошли как мастер. Можно смотреть прайс и отправлять запросы.';
-      } else if(role === 'admin' && user === 'admin' && pass === '1234'){
-        currentRole = 'Администратор';
-        els.loginMsg.textContent = 'Вы вошли как администратор. Админ-раздел открыт.';
-      } else {
-        currentRole = 'Гость';
-        els.loginMsg.textContent = 'Неверные демо-данные.';
-      }
-      updateAdminAccess();
-    }
-
-
-    const modeBtns = document.querySelectorAll('.mode-btn');
-    function applyViewMode(mode){
-      document.documentElement.removeAttribute('data-force-view');
-      if(mode === 'desktop' || mode === 'mobile') document.documentElement.setAttribute('data-force-view', mode);
-      modeBtns.forEach(btn => {
-        const active = btn.dataset.view === mode;
-        btn.classList.toggle('active', active);
-        btn.style.background = active ? 'linear-gradient(180deg,var(--primary),var(--primary-hover))' : 'transparent';
-        btn.style.color = active ? '#fff' : 'var(--muted)';
-      });
-      els.sidebar.classList.remove('open');
-    }
-    modeBtns.forEach(btn => btn.addEventListener('click', () => applyViewMode(btn.dataset.view)));
-    els.mobileNavToggle.addEventListener('click', () => els.sidebar.classList.toggle('open'));
-    els.navBtns.forEach(btn => btn.addEventListener('click', () => setSection(btn.dataset.target)));
-    els.categorySelect.addEventListener('change', e => { selectedCategory = e.target.value; selectedModel = getCategory().models[0]?.name || ''; renderModels(); });
-    els.modelSearch.addEventListener('input', renderModels);
-    els.loginBtn.addEventListener('click', () => login(els.loginRole.value, els.loginUser.value.trim(), els.loginPass.value.trim()));
-    els.demoLoginMaster.addEventListener('click', () => { els.loginRole.value='master'; els.loginUser.value='master'; els.loginPass.value='1234'; login('master','master','1234'); });
-    els.demoLoginAdmin.addEventListener('click', () => { els.loginRole.value='admin'; els.loginUser.value='admin'; els.loginPass.value='1234'; login('admin','admin','1234'); });
+    els.navButtons.forEach(btn => btn.addEventListener('click', () => setSection(btn.dataset.target)));
+    els.loginBtn.addEventListener('click', () => login(els.loginUser.value.trim(), els.loginPass.value.trim()));
+    els.demoLoginMaster.addEventListener('click', () => {
+      els.loginRole.value = 'master';
+      els.loginUser.value = 'master';
+      els.loginPass.value = '1234';
+      login('master', '1234');
+    });
+    els.demoLoginAdmin.addEventListener('click', () => {
+      els.loginRole.value = 'admin';
+      els.loginUser.value = 'admin';
+      els.loginPass.value = '1234';
+      login('admin', '1234');
+    });
     els.jumpToRequests.addEventListener('click', () => setSection('requests'));
     els.openRequestsTop.addEventListener('click', () => setSection('requests'));
-    els.simulateRequestBtn.addEventListener('click', () => {
-      appData.requests.unshift({name:'Новый клиент', device:'iPhone 14 Pro', reason:'Не заряжается, нужна диагностика разъёма', status:'Новая'});
-      renderRequests();
-      playNotification();
-    });
-    els.markRequestsReadBtn.addEventListener('click', () => {
-      const dot = document.querySelector('.notif-dot');
-      if (dot) dot.style.display = 'none';
-    });
+
+    const requestFormBtn = document.getElementById('createRequestBtn');
+    if (requestFormBtn) requestFormBtn.addEventListener('click', createRequest);
+
+    const requestFallbackBtn = Array.from(document.querySelectorAll('button')).find(btn => btn.textContent.trim() === 'Отправить заявку');
+    if (requestFallbackBtn) requestFallbackBtn.addEventListener('click', createRequest);
 
     els.adminForm.addEventListener('submit', e => {
       e.preventDefault();
-      const categoryName = document.getElementById('adminCategory').value.trim();
-      const modelName = document.getElementById('adminModel').value.trim();
-      const serviceName = document.getElementById('adminService').value.trim();
-      const price = document.getElementById('adminPrice').value.trim();
-      const desc = document.getElementById('adminDesc').value.trim() || 'Описание будет уточнено.';
-      if(!categoryName || !modelName || !serviceName || !price){
-        els.adminMsg.textContent = 'Заполни категорию, модель, услугу и цену.';
-        return;
-      }
-      let category = appData.categories.find(c => c.name === categoryName);
-      if(!category){ category = {name: categoryName, models: []}; appData.categories.push(category); }
-      let model = category.models.find(m => m.name === modelName);
-      if(!model){ model = {name: modelName, services: []}; category.models.push(model); }
-      const existing = model.services.find(s => s.name === serviceName);
-      if(existing){ existing.price = price; existing.desc = desc; }
-      else { model.services.push({name: serviceName, price, desc, tags:['новое']}); }
-      selectedCategory = categoryName;
-      selectedModel = modelName;
-      renderCategoryOptions();
-      renderModels();
-      els.adminMsg.textContent = 'Изменение сохранено в демо-версии.';
-      e.target.reset();
+      els.adminMsg.textContent = 'Каталог в этом файле пока статический. Сначала подключили живую авторизацию и заявки к backend.';
     });
 
-    renderCategoryOptions();
+    renderOverview();
+    renderCategories();
     renderModels();
-    renderSuppliers();
-    renderRequests();
-    updateAdminAccess();
+    renderServices();
+    setLoggedOutState();
+    setSection('overview');
   </script>
 </body>
 </html>
